@@ -5,10 +5,24 @@ date: "18/10/2021"
 output: github_document
 ---
 
-```{r}
+```{r setup, include = FALSE}
 library(tidyverse)
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE) #do i still need this?
 library(p8105.datasets)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
 ```
 
 First we'll load in the instacart data and do an exploration of the dataset.
@@ -42,6 +56,26 @@ instacart %>% group_by(aisle, department) %>% summarize(n_obs = n()) %>% filter(
 Next we'll create a table showing the three most popular items in each of the aisles "baking ingredients", "dog food care", and "packaged vegetables fruits".
 
 ```{r}
-instacart %>% filter(aisle == c("baking ingredients", "packaged vegetables fruits", "dog food care")) %>% group_by(aisle, product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3)
+instacart %>% filter(aisle == c("baking ingredients", "packaged vegetables fruits", "dog food care")) %>% group_by(aisle, product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
+
+instacart %>% filter(aisle == c("baking ingredients")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
+instacart %>% filter(aisle == c("packaged vegetables fruits")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
+instacart %>% filter(aisle == c("dog food care")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
+
 ```
+
+Next we'll make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week and will format the table for human readers. 
+
+
+```{r}
+instacart %>% 
+  filter(product_name == c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
+  group_by(order_dow, product_name) %>% 
+  summarize(mean_hour_of_day = mean(order_hour_of_day)) %>% 
+  pivot_wider(
+    names_from = product_name, 
+    values_from = mean_hour_of_day) %>% 
+  knitr::kable(digits = 1)
+```
+
 
