@@ -19,3 +19,14 @@ str(instacart)
 ```
 
 The instacart dataset contains `r nrow(instacart)` rows of data for `r ncol(instacart)` variables. Key variables include order ID, product ID, add to cart order, user ID, order hour of day, days since prior order, and department. 
+
+There are `r pull(instacart, aisle) %>% unique() %>% length()` aisles. Let's determine which aisle the most items are ordered from. 
+
+```{r}
+instacart %>% group_by(aisle) %>% summarize(n_obs = n()) %>% arrange(desc(n_obs))
+```
+The most items are ordered from the fresh vegetables, fresh fruits, and packaged vegetables and fruits aisle.  
+
+
+
+
