@@ -39,3 +39,9 @@ instacart %>% group_by(aisle, department) %>% summarize(n_obs = n()) %>% filter(
 
 ```
 
+Next we'll create a table showing the three most popular items in each of the aisles "baking ingredients", "dog food care", and "packaged vegetables fruits".
+
+```{r}
+instacart %>% filter(aisle == c("baking ingredients", "packaged vegetables fruits", "dog food care")) %>% group_by(aisle, product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3)
+```
+
