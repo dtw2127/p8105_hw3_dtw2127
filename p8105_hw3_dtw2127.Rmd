@@ -7,6 +7,7 @@ output: github_document
 
 ```{r}
 library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
 library(p8105.datasets)
 ```
 
@@ -23,10 +24,18 @@ The instacart dataset contains `r nrow(instacart)` rows of data for `r ncol(inst
 There are `r pull(instacart, aisle) %>% unique() %>% length()` aisles. Let's determine which aisle the most items are ordered from. 
 
 ```{r}
-instacart %>% group_by(aisle) %>% summarize(n_obs = n()) %>% arrange(desc(n_obs))
+instacart %>% group_by(aisle, aisle_id) %>% summarize(n_obs = n()) %>% arrange(desc(n_obs)) 
 ```
 The most items are ordered from the fresh vegetables, fresh fruits, and packaged vegetables and fruits aisle.  
 
+We'll make a plot that shows the number of items ordered from each aisle. 
 
+```{r}
 
+instacart %>% group_by(aisle, department) %>% summarize(n_obs = n()) %>% filter(n_obs > 10000) %>% arrange(department) %>% 
+  ggplot(aes(x = aisle, y = n_obs)) + 
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90))
+
+```
 
