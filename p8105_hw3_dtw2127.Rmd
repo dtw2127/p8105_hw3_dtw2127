@@ -38,7 +38,7 @@ The instacart dataset contains `r nrow(instacart)` rows of data for `r ncol(inst
 There are `r pull(instacart, aisle) %>% unique() %>% length()` aisles. Let's determine which aisle the most items are ordered from. 
 
 ```{r}
-instacart %>% group_by(aisle, aisle_id) %>% summarize(n_obs = n()) %>% arrange(desc(n_obs)) 
+instacart %>% group_by(aisle) %>% summarize(n_obs = n()) %>% slice_max(n_obs, n=3)
 ```
 The most items are ordered from the fresh vegetables, fresh fruits, and packaged vegetables and fruits aisle.  
 
@@ -46,21 +46,22 @@ We'll make a plot that shows the number of items ordered from each aisle.
 
 ```{r}
 
-instacart %>% group_by(aisle, department) %>% summarize(n_obs = n()) %>% filter(n_obs > 10000) %>% arrange(department) %>% 
+instacart %>% group_by(aisle, department) %>% summarize(n_obs = n()) %>% filter(n_obs > 10000) %>% 
   ggplot(aes(x = aisle, y = n_obs)) + 
   geom_bar(stat = "identity") +
   theme(axis.text.x = element_text(angle = 90))
 
+#arrange bars in ascending order
 ```
 
 Next we'll create a table showing the three most popular items in each of the aisles "baking ingredients", "dog food care", and "packaged vegetables fruits".
 
 ```{r}
-instacart %>% filter(aisle == c("baking ingredients", "packaged vegetables fruits", "dog food care")) %>% group_by(aisle, product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
+instacart %>% filter(aisle %in% c("baking ingredients", "packaged vegetables fruits", "dog food care")) %>% group_by(aisle, product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
 
-instacart %>% filter(aisle == c("baking ingredients")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
-instacart %>% filter(aisle == c("packaged vegetables fruits")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
-instacart %>% filter(aisle == c("dog food care")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
+#instacart %>% filter(aisle == c("baking ingredients")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
+#instacart %>% filter(aisle == c("packaged vegetables fruits")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
+#instacart %>% filter(aisle == c("dog food care")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
 
 ```
 
@@ -69,13 +70,28 @@ Next we'll make a table showing the mean hour of the day at which Pink Lady Appl
 
 ```{r}
 instacart %>% 
-  filter(product_name == c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
   group_by(order_dow, product_name) %>% 
   summarize(mean_hour_of_day = mean(order_hour_of_day)) %>% 
   pivot_wider(
     names_from = product_name, 
     values_from = mean_hour_of_day) %>% 
   knitr::kable(digits = 1)
+```
+
+## Problem 2
+
+First, let's load in the BRFSS data and then do some data cleaning. 
+
+```{r}
+data("brfss_smart2010") #rename some of the variables
+
+brfss = brfss_smart2010 %>% 
+  janitor::clean_names() %>% 
+  mutate(topic = as.factor(topic)) %>%
+  filter(topic == "Overall Health") %>%
+  mutate(response = as.factor(response)) %>% 
+  mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very Good", "Excellent")))
 ```
 
 
