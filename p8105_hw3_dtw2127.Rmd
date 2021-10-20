@@ -109,3 +109,33 @@ brfss %>%
 In 2002, CT, FL, MA, NC, NJ and PA were observed at 7 or more locations. 
 
 In 2010, CA, CO, FL, MA, MD, NC, NE, NJ, NY, OH, PA, SC, TX, WA were observed at 7 or more locations. 
+
+Next, we will construct a dataset limited to 'Excellent' responses and containing year, state and a variable averaging data_value across locations within a state. 
+
+```{r}
+brfss %>%
+  filter(response == "Excellent") %>% 
+  group_by(locationabbr, geo_location) %>% 
+  mutate(mean_data_value = mean(data_value)) %>% 
+  select(year, locationabbr, mean_data_value) %>% 
+  ggplot(aes(x = year, y = mean_data_value, color = locationabbr)) + 
+  geom_line(aes(group = locationabbr)) +
+  theme(legend.position = "right")
+  
+```
+
+The majority of mean data values are under 30. 
+
+Next, we'll make a two-panel plot showing the distribution of data_value for responses ("Poor" to "Excellent") for 2006 and 2010 among locations in NY State.
+
+```{r}
+brfss %>% 
+  filter(response %in% c("Poor", "Fair", "Good",
+                         "Very Good", "Excellent"),
+         year %in% c(2006,2010)) %>% 
+  group_by(locationabbr, geo_location) %>% 
+  ggplot(aes(x = response, y = data_value)) + 
+  geom_point() + 
+  facet_grid(. ~ year)
+```
+
