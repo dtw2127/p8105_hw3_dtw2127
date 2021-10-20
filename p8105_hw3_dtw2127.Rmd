@@ -94,4 +94,18 @@ brfss = brfss_smart2010 %>%
   mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very Good", "Excellent")))
 ```
 
+Let's determine how many states were observed at 7 or more locations in 2002 and 2010. 
 
+```{r}
+brfss %>% 
+  filter(year %in% c(2002, 2010)) %>% 
+  select(locationabbr, geo_location, year) %>% 
+  distinct() %>% 
+  group_by(locationabbr, year) %>% 
+  summarize(n_obs = n()) %>%
+  filter(n_obs >= 7) %>% 
+  arrange(year)
+```
+In 2002, CT, FL, MA, NC, NJ and PA were observed at 7 or more locations. 
+
+In 2010, CA, CO, FL, MA, MD, NC, NE, NJ, NY, OH, PA, SC, TX, WA were observed at 7 or more locations. 
