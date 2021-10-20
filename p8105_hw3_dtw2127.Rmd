@@ -140,4 +140,30 @@ brfss %>%
 ```
 ## Problem 3 
 
+Let's load in and tidy the data. 
+
+```{r}
+accel_data = read_csv("./data/accel_data.csv") %>%
+  janitor::clean_names() %>% 
+  pivot_longer(
+    activity_1:activity_1440, 
+    names_to = "activity", 
+    names_prefix = "activity_",
+    values_to = "activity_count") %>% 
+  mutate(weekend = ifelse(day %in% c("Saturday", "Sunday"), 1, 0), 
+         activity = as.numeric(activity), 
+         weekend = as.factor(weekend)) 
+
+```
+
+The resulting dataset has the variables week, day_id, day, activity, activity_count and weekend. For these 6 variables, there are `nrow(accel_data)` observations. 
+
+Next we'll aggregate minutes of activity over each day and create a table with the totals. 
+
+```{r}
+accel_data %>% 
+  group_by(day_id) %>% 
+  summarize(activity_total = sum(activity_count)) %>% 
+  knitr::kable()
+```
 
