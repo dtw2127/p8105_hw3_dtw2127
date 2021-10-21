@@ -10,7 +10,6 @@ library(tidyverse)
 library(p8105.datasets)
 library(ggplot2)
 
-#knitr::opts_chunk$set(echo = TRUE) 
 knitr::opts_chunk$set(
   fig.width = 6,
   fig.asp = .6,
@@ -33,9 +32,7 @@ data("instacart")
 
 ```
 
-The instacart dataset contains `r nrow(instacart)` rows of data for `r ncol(instacart)` variables. Key variables include order ID, product ID, add to cart order, user ID, order hour of day, days since prior order, and department. 
-
-The dataset contains information from `r pull(instacart, user_id) %>% unique() %>% length()` users. 
+The instacart dataset contains `r nrow(instacart)` rows of data for `r ncol(instacart)` variables. All variables are either integer or character variables. Some key variables include order ID, product ID, add to cart order, user ID, order hour of day, days since prior order, and department. The dataset contains information from `r pull(instacart, user_id) %>% unique() %>% length()` users. 
 
 Let's see how many different products are carried by each department.
 
@@ -134,7 +131,7 @@ On average, orders for Coffee Ice Cream happen later in the day as compared to o
 
 ## Problem 2
 
-First, let's load in the BRFSS data and then do some data cleaning. 
+First, let's load in the BRFSS data and then do some data cleaning. We'll order the responses for "Overall Health" from "Poor" to "Excellent". 
 
 ```{r}
 data("brfss_smart2010") #rename some of the variables
@@ -214,7 +211,7 @@ accel_data = read_csv("./data/accel_data.csv") %>%
 
 ```
 
-The resulting dataset has the variables week, day_id, day, activity, activity_count and weekend. For these 6 variables, there are `nrow(accel_data)` observations over ` r pull(accel_data, day_id) %>% unique() %>% length()` days. The minimum activity_count is `r pull(accel_data, activity_count) %>% min()` and the max activity count is `r pull(accel_data, activity_count) %>% max()`. 
+The resulting dataset has the variables week, day_id, day, activity, activity_count and weekend. The variables are all numeric, except for day which is a character variable and weekend which is a factor variable (value of 1 if a weekday, 0 if not). For these 6 variables, there are `nrow(accel_data)` observations over ` r pull(accel_data, day_id) %>% unique() %>% length()` days. The minimum activity_count is `r pull(accel_data, activity_count) %>% min()` and the max activity count is `r pull(accel_data, activity_count) %>% max()`.  
 
 We'll aggregate minutes of activity over each day and create a table with the totals. 
 
@@ -233,7 +230,8 @@ Finally, we will create a plot showing 24 hour activity time courses for each da
 accel_data %>% 
   ggplot(aes(x = minute_of_day, y = activity_count)) + 
   geom_point(aes(color = day), size = .3, alpha = 0.4) + 
-  scale_colour_manual(values = rainbow(7)) 
+  scale_colour_manual(values = rainbow(7)) + 
+  labs(x = "minute of the day", y = "activity count")
 ```
 
-Activity count is lower at the beginning of the day and picks up at around the 300 minute mark. There are periods of high activity in the middle of the day on Saturday and Sunday. On Mondays, Wednesday and Fridays, there is a burst in activity near the end of the day. 
+Activity count is lower at the beginning of the day and picks up at around the 300 minute mark. The activity count is relatively uniform throughout the day and tends to stay below 2500 activity counts, but there are pockets of higher activity. There are periods of high activity in the middle of the day (just before the 750 minute mark and at around the 1000 and 1250 minute mark) on Saturday and Sunday. On Mondays, Wednesdays and Fridays, there is a burst in activity near the end of the day (1250 minute mark). On Thursdays there is also a burst in activity right before the 500 minute mark. 
