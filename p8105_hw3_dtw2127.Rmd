@@ -7,9 +7,10 @@ output: github_document
 
 ```{r setup, include = FALSE}
 library(tidyverse)
-knitr::opts_chunk$set(echo = TRUE) #do i still need this?
 library(p8105.datasets)
+library(ggplot2)
 
+#knitr::opts_chunk$set(echo = TRUE) 
 knitr::opts_chunk$set(
   fig.width = 6,
   fig.asp = .6,
@@ -30,26 +31,63 @@ First we'll load in the instacart data and do an exploration of the dataset.
 ```{r}
 data("instacart")
 
-str(instacart)
 ```
 
 The instacart dataset contains `r nrow(instacart)` rows of data for `r ncol(instacart)` variables. Key variables include order ID, product ID, add to cart order, user ID, order hour of day, days since prior order, and department. 
 
+The dataset contains information from `r pull(instacart, user_id) %>% unique() %>% length()` users. 
+
+Let's see how many different products are carried by each department.
+
+```{r}
+instacart %>% 
+  group_by(department) %>% 
+  summarize(n_products = n_distinct(product_name)) %>% 
+  arrange(desc(n_products))
+```
+The snacks department carries the most number of different products, while the bulk department carries the least. 
+
+Let's see which day of the week is most popular for orders.
+
+```{r}
+instacart %>% 
+  mutate(order_dow = recode(order_dow, `0` = "Sunday", 
+                            `1` = "Monday", 
+                            `2` = "Tuesday", 
+                            `3` = "Wednesday", 
+                            `4` = "Thursday", 
+                            `5` = "Friday", 
+                            `6` = "Saturday")) %>%
+  group_by(order_dow) %>%
+  summarize(n_orders = n_distinct(order_id)) %>% 
+  arrange(desc(n_orders))
+  
+```
+Sundays are the most popular days for orders, followed by Monday. 
+
 There are `r pull(instacart, aisle) %>% unique() %>% length()` aisles. Let's determine which aisle the most items are ordered from. 
 
 ```{r}
-instacart %>% group_by(aisle) %>% summarize(n_obs = n()) %>% slice_max(n_obs, n=3)
+instacart %>% 
+  group_by(aisle) %>% 
+  summarize(n_obs = n()) %>% 
+  slice_max(n_obs, n=3) %>%
+  knitr::kable()
 ```
 The most items are ordered from the fresh vegetables, fresh fruits, and packaged vegetables and fruits aisle.  
 
 We'll make a plot that shows the number of items ordered from each aisle. 
 
-```{r}
+```{r, fig.width = 10, fig.height = 11}
 
-instacart %>% group_by(aisle, department) %>% summarize(n_obs = n()) %>% filter(n_obs > 10000) %>% 
-  ggplot(aes(x = aisle, y = n_obs)) + 
-  geom_bar(stat = "identity") +
-  theme(axis.text.x = element_text(angle = 90))
+instacart %>% 
+  group_by(aisle, department) %>% 
+  summarize(n_obs = n()) %>% filter(n_obs > 10000) %>% 
+  ggplot(aes(x = forcats::fct_reorder(aisle, n_obs), y = n_obs)) +
+  geom_bar(stat = "identity", width = 0.7, position = "dodge") + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(x = "aisle", y = "number of items ordered") + 
+  coord_flip()
 
 #arrange bars in ascending order
 ```
@@ -57,13 +95,18 @@ instacart %>% group_by(aisle, department) %>% summarize(n_obs = n()) %>% filter(
 Next we'll create a table showing the three most popular items in each of the aisles "baking ingredients", "dog food care", and "packaged vegetables fruits".
 
 ```{r}
-instacart %>% filter(aisle %in% c("baking ingredients", "packaged vegetables fruits", "dog food care")) %>% group_by(aisle, product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
-
-#instacart %>% filter(aisle == c("baking ingredients")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
-#instacart %>% filter(aisle == c("packaged vegetables fruits")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
-#instacart %>% filter(aisle == c("dog food care")) %>% group_by(product_name) %>% summarize(n_obs = n()) %>% slice_max(order_by = n_obs, n = 3) %>% knitr::kable()
+instacart %>% 
+  filter(aisle %in% c("baking ingredients", 
+                      "packaged vegetables fruits", 
+                      "dog food care")) %>% 
+  group_by(aisle, product_name) %>% 
+  summarize(n_obs = n()) %>% 
+  slice_max(order_by = n_obs, n = 3) %>% 
+  knitr::kable()
 
 ```
+
+The most popular items in the baking ingredients aisle are light brown sugar, pure baking soda and cane sugar. The most popular items in the dog food care aisle are snack sticks chicken & rice recipe dog treats, organic chicken & brown rice recipe, and small dog biscuits. The most popular items in the packaged vegetables fruits aisle are organic baby spinach, raspberries and blueberries. 
 
 Next we'll make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week and will format the table for human readers. 
 
@@ -71,10 +114,18 @@ Next we'll make a table showing the mean hour of the day at which Pink Lady Appl
 ```{r}
 instacart %>% 
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
+  mutate(order_dow = recode(order_dow, `0` = "Sunday", 
+                            `1` = "Monday", 
+                            `2` = "Tuesday", 
+                            `3` = "Wednesday", 
+                            `4` = "Thursday", 
+                            `5` = "Friday", 
+                            `6` = "Saturday")) %>%
+  mutate(order_dow = factor(order_dow, levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))) %>% 
   group_by(order_dow, product_name) %>% 
   summarize(mean_hour_of_day = mean(order_hour_of_day)) %>% 
   pivot_wider(
-    names_from = product_name, 
+    names_from = order_dow, 
     values_from = mean_hour_of_day) %>% 
   knitr::kable(digits = 1)
 ```
@@ -110,12 +161,12 @@ In 2002, CT, FL, MA, NC, NJ and PA were observed at 7 or more locations.
 
 In 2010, CA, CO, FL, MA, MD, NC, NE, NJ, NY, OH, PA, SC, TX, WA were observed at 7 or more locations. 
 
-Next, we will construct a dataset limited to 'Excellent' responses and containing year, state and a variable averaging data_value across locations within a state. 
+Next, we will construct a dataset limited to 'Excellent' responses and containing year, state and a variable averaging data_value across locations within a state, and we'll make a spaghetti plot of the average value over time.
 
 ```{r}
 brfss %>%
   filter(response == "Excellent") %>% 
-  group_by(locationabbr, geo_location) %>% 
+  group_by(locationabbr, year) %>% 
   mutate(mean_data_value = mean(data_value)) %>% 
   select(year, locationabbr, mean_data_value) %>% 
   ggplot(aes(x = year, y = mean_data_value, color = locationabbr)) + 
@@ -135,7 +186,16 @@ brfss %>%
          year %in% c(2006,2010)) %>% 
   group_by(locationabbr, geo_location) %>% 
   ggplot(aes(x = response, y = data_value)) + 
-  geom_point() + 
+  geom_point(size = .5) + 
+  facet_grid(. ~ year)
+
+brfss %>% 
+  filter(response %in% c("Poor", "Fair", "Good",
+                         "Very Good", "Excellent"),
+         year %in% c(2006,2010)) %>% 
+  group_by(locationabbr, geo_location) %>% 
+  ggplot(aes(x = data_value, fill = response)) + 
+  geom_density(alpha = .4, adjust = .5, color = "blue") + 
   facet_grid(. ~ year)
 ```
 ## Problem 3 
@@ -167,3 +227,34 @@ accel_data %>%
   knitr::kable()
 ```
 
+```{r}
+accel_data %>% 
+  group_by(day_id) %>% 
+  summarize(activity_total = sum(activity_count)) %>% 
+  ggplot(aes(day_id, activity_total)) + 
+  geom_point()
+```
+
+```{r}
+accel_data %>% 
+  group_by(day_id) %>% 
+  summarize(activity_total = sum(activity_count)) %>%
+  max()
+```
+`r accel_data %>% 
+  group_by(day_id) %>% 
+  summarize(activity_total = sum(activity_count)) %>%
+  max()`
+
+
+Finally, we will create a plot showing 24 hour activity time courses for each day. 
+
+```{r}
+accel_data %>% 
+  #group_by(day_id) %>% 
+  ggplot(aes(x = activity, y = activity_count)) + 
+  geom_line(aes(color = day), size = .3, alpha = 0.4) + 
+  scale_colour_manual(values = rainbow(7)) 
+```
+
+There is a general upward trend in activity counts. 
