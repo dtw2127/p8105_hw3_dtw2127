@@ -91,6 +91,7 @@ instacart %>%
 
 #arrange bars in ascending order
 ```
+As we showed previously, the most popular aisles are fresh vegetables, fresh fruits and packaged vegetables and fruits. The number of items ordered from fresh vegetables and fresh fruits approximately doubles the items ordered from pacakaged vegetables and fruits. The least number of items are ordered from the dry pasta, oils vinegars and butter aisle. 
 
 Next we'll create a table showing the three most popular items in each of the aisles "baking ingredients", "dog food care", and "packaged vegetables fruits".
 
@@ -106,7 +107,7 @@ instacart %>%
 
 ```
 
-The most popular items in the baking ingredients aisle are light brown sugar, pure baking soda and cane sugar. The most popular items in the dog food care aisle are snack sticks chicken & rice recipe dog treats, organic chicken & brown rice recipe, and small dog biscuits. The most popular items in the packaged vegetables fruits aisle are organic baby spinach, raspberries and blueberries. 
+The most popular items in the baking ingredients aisle are light brown sugar, pure baking soda and cane sugar. The most popular items in the dog food care aisle are snack sticks chicken & rice recipe dog treats, organic chicken & brown rice recipe, and small dog biscuits. The most popular items in the packaged vegetables fruits aisle are organic baby spinach, raspberries and blueberries. Spinach is by far the most popular item of the packaged vegetables and fruits aisle. 
 
 Next we'll make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week and will format the table for human readers. 
 
@@ -129,6 +130,7 @@ instacart %>%
     values_from = mean_hour_of_day) %>% 
   knitr::kable(digits = 1)
 ```
+On average, orders for Coffee Ice Cream happen later in the day as compared to orders for Pink Lady Apples. Orders for Coffee Ice Cream are on average placed early to mid afternoon. For all days of the week, orders for Pink Lady Apples are placed on average in the late afternoon or early afternoon. 
 
 ## Problem 2
 
@@ -161,6 +163,8 @@ In 2002, CT, FL, MA, NC, NJ and PA were observed at 7 or more locations.
 
 In 2010, CA, CO, FL, MA, MD, NC, NE, NJ, NY, OH, PA, SC, TX, WA were observed at 7 or more locations. 
 
+In 2002, the most number of observations were made in PA (10). In 2010, the most number of observations were made in NJ (19). 
+
 Next, we will construct a dataset limited to 'Excellent' responses and containing year, state and a variable averaging data_value across locations within a state, and we'll make a spaghetti plot of the average value over time.
 
 ```{r}
@@ -175,7 +179,7 @@ brfss %>%
   
 ```
 
-The majority of mean data values are under 30. 
+The range of the mean data values is between 10 and 30. There is a general decreasing trend in mean data values as the year increases. There are notable dips in mean data values in 2005 and 2009 in WV and 2009 in IN. 
 
 Next, we'll make a two-panel plot showing the distribution of data_value for responses ("Poor" to "Excellent") for 2006 and 2010 among locations in NY State.
 
@@ -185,19 +189,12 @@ brfss %>%
                          "Very Good", "Excellent"),
          year %in% c(2006,2010)) %>% 
   group_by(locationabbr, geo_location) %>% 
-  ggplot(aes(x = response, y = data_value)) + 
-  geom_point(size = .5) + 
-  facet_grid(. ~ year)
-
-brfss %>% 
-  filter(response %in% c("Poor", "Fair", "Good",
-                         "Very Good", "Excellent"),
-         year %in% c(2006,2010)) %>% 
-  group_by(locationabbr, geo_location) %>% 
   ggplot(aes(x = data_value, fill = response)) + 
   geom_density(alpha = .4, adjust = .5, color = "blue") + 
   facet_grid(. ~ year)
 ```
+The distribution of data values for the different responses was quite similar in 2006 and 2010. The distribution of data values for those responding with "Poor" was narrowest and widest for those responding "Excellent". The data values were lowest for those who responded "Poor" and highest for those who responded "Good". 
+
 ## Problem 3 
 
 Let's load in and tidy the data. 
@@ -212,13 +209,14 @@ accel_data = read_csv("./data/accel_data.csv") %>%
     values_to = "activity_count") %>% 
   mutate(weekend = ifelse(day %in% c("Saturday", "Sunday"), 1, 0), 
          activity = as.numeric(activity), 
-         weekend = as.factor(weekend)) 
+         weekend = as.factor(weekend)) %>% 
+  rename(minute_of_day = activity)
 
 ```
 
-The resulting dataset has the variables week, day_id, day, activity, activity_count and weekend. For these 6 variables, there are `nrow(accel_data)` observations. 
+The resulting dataset has the variables week, day_id, day, activity, activity_count and weekend. For these 6 variables, there are `nrow(accel_data)` observations over ` r pull(accel_data, day_id) %>% unique() %>% length()` days. The minimum activity_count is `r pull(accel_data, activity_count) %>% min()` and the max activity count is `r pull(accel_data, activity_count) %>% max()`. 
 
-Next we'll aggregate minutes of activity over each day and create a table with the totals. 
+We'll aggregate minutes of activity over each day and create a table with the totals. 
 
 ```{r}
 accel_data %>% 
@@ -227,34 +225,15 @@ accel_data %>%
   knitr::kable()
 ```
 
-```{r}
-accel_data %>% 
-  group_by(day_id) %>% 
-  summarize(activity_total = sum(activity_count)) %>% 
-  ggplot(aes(day_id, activity_total)) + 
-  geom_point()
-```
-
-```{r}
-accel_data %>% 
-  group_by(day_id) %>% 
-  summarize(activity_total = sum(activity_count)) %>%
-  max()
-```
-`r accel_data %>% 
-  group_by(day_id) %>% 
-  summarize(activity_total = sum(activity_count)) %>%
-  max()`
-
+There are no immediate trends apparent. Activity appears to be quite uniform over the 35 day period, with the activity total tending to stay within the 30,000 - 50,000 count range. The low total activity count is 1440, and high 685910. 
 
 Finally, we will create a plot showing 24 hour activity time courses for each day. 
 
 ```{r}
 accel_data %>% 
-  #group_by(day_id) %>% 
-  ggplot(aes(x = activity, y = activity_count)) + 
-  geom_line(aes(color = day), size = .3, alpha = 0.4) + 
+  ggplot(aes(x = minute_of_day, y = activity_count)) + 
+  geom_point(aes(color = day), size = .3, alpha = 0.4) + 
   scale_colour_manual(values = rainbow(7)) 
 ```
 
-There is a general upward trend in activity counts. 
+Activity count is lower at the beginning of the day and picks up at around the 300 minute mark. There are periods of high activity in the middle of the day on Saturday and Sunday. On Mondays, Wednesday and Fridays, there is a burst in activity near the end of the day. 
